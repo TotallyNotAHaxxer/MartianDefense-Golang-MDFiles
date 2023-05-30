@@ -21,7 +21,7 @@ Golang is a programming language that has many amazing features to it, so what e
 
 Golang is a interesting programming language and has a weird syntax, so lets explain the rules of the compiler before we jump into everything.
 
-> Golang | Files
+## Golang | Files ##
 
 Every programming language has some form of file system, it has some form of extension that is also run through the compiler or interpreter. Golang has multiple files which are placed in the table below.
 
@@ -31,11 +31,11 @@ Every programming language has some form of file system, it has some form of ext
 | .mod                  | Golang Module file. These files are used for directories and module development which will be talked about later |
 | .sum                  | Golang Module file which holds all the cryptographic signatures for third party libraries in use within the project |
 
-> Golang | Entry Points
+## Golang | Entry Points ##
 
 Like most compiled and statically typed lamguages such as C, C++, Assembler, Fortran etc Golang has a main entry point and a sub entry point that is optional. What do I mean when I say sub entry point and main entry point. The main entry point of a golang program is defined as `main` while a sub entry point is called `init`. These are both possible entry points that can be placed wherever in the file.
 
-** the `init` sub entry point **
+## The `init` sub entry point##
 
 Golang has a weird file layout which we will go over in a second, but for now lets go over the entry points. The first entry point we are going over is the optional entry point. This function is defined like so.
 
@@ -55,7 +55,7 @@ func init() {
 
 and this will then be run before main. This entry point is not a primary entry point for go and can not be used as a final entry point to the program, so we need to use `main`
 
-** The `main` entry point **
+## The `main` entry point ##
 
 This is the actual program entry point within the program, this MUST be declared for a go program to run. To declare a main function we can do it as shown below.
 
