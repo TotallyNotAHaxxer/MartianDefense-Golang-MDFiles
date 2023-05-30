@@ -78,3 +78,17 @@ Below is a list of rules for init and main functions
 > `init` functions can be declared in any source code file 
 > `main` functions have to be placed in a .go source code file with the package of `main`
 
+# Module (Go Theory) | Intro
+
+Go has a different syntax and is kinda confusing for some people to get around so this module will be discussing theory within the Go programming language.
+
+> What is programatic theory?
+
+When it comes to programming, theory, is the study of concepts within a program or in this case specific programming language. Learning theory will help you learn the logical pathways for the language and understand how to piece new concepts together.
+
+> What will this module contain?
+
+This this is not CompSCI, Programatic, General or computational theory and rather a field that focuses on the prime aspects; This module will contain information about the Go programming language such as a file layout, module layout, type system, working with different structures, working with functions and so on from there.
+
+# Sub Page -> Go Theory | 
+
