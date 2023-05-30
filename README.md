@@ -90,5 +90,118 @@ When it comes to programming, theory, is the study of concepts within a program 
 
 This this is not CompSCI, Programatic, General or computational theory and rather a field that focuses on the prime aspects; This module will contain information about the Go programming language such as a file layout, module layout, type system, working with different structures, working with functions and so on from there.
 
-# Sub Page -> Go Theory | 
+## Sub Page -> Go Theory | File Contruction
+
+When it comes to working with Go, there are many missed aspects within the language, such as the file construction. Within golang, there are is multiple fields to talk about, the top level, mid level and bottom level of the program. Typically, the mid of the file is the secondary "top" level of the program. What defines these?
+
+> Top Level
+
+The top level of a go program or .go source code file MUST contain a package name. To declare a package name you type `package` followed by the name of the package or module you are making. For the basic sense of things, a simple go program that is a main file or main entry to a program, must contain `package main` this is also where the `main` entry point is to the program.
+
+```go
+package main 
+
+func main() {
+    println("hi")
+}
+```
+
+This is pretty simple to understand as the first and primary top level of the program or first line of every go program MUST contain a package name.
+
+> Secondary Top Level AKA Mid level.
+
+For programs that use libraries, Golang only allows you to import or link modules using the import keywords for which is defined at the top of a program. Say we want to write " hey guys \n hows it going! " in a program using the FMT package. We have to write this in the following form 
+
+```go
+package main 
+
+import "fmt"
+
+func main() {
+  fmt.Print("hey guys! \n hows it going!")
+}
+```
+
+This is pretty easy to dissect and look at, what about listed imports? Cool thing about go is that importing files or even libraries or modules can all be done simply by using a list within the import expression which is shown below.
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+  fmt.Println(os.Args[1])
+}
+```
+
+This program prints out the arguments when the program is run or rather the first command line argument. As you can see, the import list does not require comma's as it relies on whitespace.
+
+> Bottom Level 
+
+The bottom level of a program is where all your functions are typically going to be stored or executed calls. In the case of our program above, the main function is at the bottom level or scope of the program.
+
+## Sub Page -> Go Theory | Executing Files 
+
+> Basic execution
+
+Executing golang source code files can be quite easy, but golang has quite the tools. To simply run a golang file such as the one shown below 
+
+```go
+package main 
+
+func main() {
+    println("hi")
+}
+```
+ 
+you type `go run main.go`. Remember that the main file must have `package main` in order for it to be run and have a valid entry point declared as `main` for the program to run.
+
+> Building to a executeable
+
+In order to build a golang program for the current architecture or system you are on, simply run `go build`. When this is built if no output flag is defined, golang will then take the file name and compile it to have the executeable name set as the file names. So if we compiled `hello.go` without a specification on the name then the output will be `hello.exe` on windows or `hello` on linux.
+
+> Naming builds 
+
+Golang has many variables and flags you can use to optimize the build's name and target. 
+
+Use the `-o` option followed by a name to compile by name like so; `go build -o HelloProgram main.go`
+
+> Using Env variables to customize builds and targets
+
+In the previous section I had mentioned environment variables and types for the Go programming language. Well, Go has the following environment variables.
+
+| Environment Variable | Description                                                | Example                              |
+|----------------------|------------------------------------------------------------|--------------------------------------|
+| `PATH`               | Specifies directories to search for executable programs     | `/usr/local/bin:/usr/bin:/bin`        |
+| `HOME`               | Specifies the user's home directory                         | `/Users/username`                    |
+| `USER`               | Specifies the username of the current user                  | `johndoe`                            |
+| `GOPATH`             | Specifies the Go workspace directory                        | `/Users/username/go`                  |
+| `GOROOT`             | Specifies the directory where the Go installation is located| `/usr/local/go`                      |
+| `GOOS`               | Specifies the target operating system for the build         | `linux`                              |
+| `GOARCH`             | Specifies the target architecture for the build             | `amd64`                              |
+| `GOBIN`              | Specifies the directory where Go binaries should be installed| `/Users/username/go/bin`              |
+| `GOENV`              | Specifies the path to a file that overrides environment vars| `/Users/username/.go/environment`     |
+
+In order to use these environment variables we can change their values before build such as 
+
+`GOOS=linux go build -o hello main.go`
+
+which will build the file specific towards the ELF file format.
+
+> Looking for environmental support
+
+Sometimes when working with Go and compiling programs in Go, you may want to compile for another architecture and system. To do so, execute the following command to drop a list of all architectures and operating systems supported.
+
+`go tool dist list`
+
+which will drop down the entire list of possible targets allows by the compiler.
+
+We can now make our program build for AMD64 and Linux by issuing the following command
+
+```
+GOOS=linux GOARCH=amd64 go build -o main main.go
+```
 
