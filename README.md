@@ -2,11 +2,11 @@
   <img src="https://github.com/TotallyNotAHaxxer/MartianDefense-Golang-MDFiles/blob/main/Screenshot%20from%202023-05-30%2015-18-09.png">
 </p>
 
-# Module introduction
+# Module (Go) introduction
 
 This module within the Martian Defense gitbook goes over the Go programming language. The Go programming language is used quite often in the cyber security world and is much more worth it to learn than you might think. For context, Go is a statically typed, machine code compiled and versatile programming language that can be used for many security specific tasks such as reverse shells, cryptography, networking, server side and client side development and even malware development.
 
-# Go | For Security 
+# Sub Page -> Go | For Security 
 
 Golang is a programming language that has many amazing features to it, so what exactly makes go suited for security specifically? In order to solve this, a table has been provided below.
 
@@ -17,11 +17,11 @@ Golang is a programming language that has many amazing features to it, so what e
 | Speed and performance | Golang is one of the faster more used programming language's because of the way it's compiler optimizes and generates code while also working with virtual tables! |
 | Concurrency | Another amazing feature of the Go programming language is that it is a very very thread heavy language and has support for atomic, async, mutex and other various threading factors |
 
-# Go | Introduction
+# Sub Page -> Go | Introduction
 
 Golang is a interesting programming language and has a weird syntax, so lets explain the rules of the compiler before we jump into everything.
 
-## Golang | Files ##
+## Sub Page -> Golang | Files ##
 
 Every programming language has some form of file system, it has some form of extension that is also run through the compiler or interpreter. Golang has multiple files which are placed in the table below.
 
@@ -31,11 +31,11 @@ Every programming language has some form of file system, it has some form of ext
 | .mod                  | Golang Module file. These files are used for directories and module development which will be talked about later |
 | .sum                  | Golang Module file which holds all the cryptographic signatures for third party libraries in use within the project |
 
-## Golang | Entry Points ##
+## Sub Page -> Golang | Entry Points ##
 
 Like most compiled and statically typed lamguages such as C, C++, Assembler, Fortran etc Golang has a main entry point and a sub entry point that is optional. What do I mean when I say sub entry point and main entry point. The main entry point of a golang program is defined as `main` while a sub entry point is called `init`. These are both possible entry points that can be placed wherever in the file.
 
-## The `init` sub entry point##
+### The `init` sub entry point###
 
 Golang has a weird file layout which we will go over in a second, but for now lets go over the entry points. The first entry point we are going over is the optional entry point. This function is defined like so.
 
@@ -55,7 +55,7 @@ func init() {
 
 and this will then be run before main. This entry point is not a primary entry point for go and can not be used as a final entry point to the program, so we need to use `main`
 
-## The `main` entry point ##
+### The `main` entry point ###
 
 This is the actual program entry point within the program, this MUST be declared for a go program to run. To declare a main function we can do it as shown below.
 
@@ -67,7 +67,7 @@ func main() {
 
 and when we run our program it will execute. 
 
-** Clashing with init and main | Rules **
+### Clashing with init and main | Rules ###
 
 INIT functions CAN NOT BE CALLED. This is because the go compiler will prioritize these calls on the backend already and double calling an initation function is not directly supported or should be done anyway. 
 
@@ -77,3 +77,4 @@ Below is a list of rules for init and main functions
 > In order to use a `init` function `main` must be declared
 > `init` functions can be declared in any source code file 
 > `main` functions have to be placed in a .go source code file with the package of `main`
+
