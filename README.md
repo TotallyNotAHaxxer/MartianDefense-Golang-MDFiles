@@ -205,3 +205,111 @@ We can now make our program build for AMD64 and Linux by issuing the following c
 GOOS=linux GOARCH=amd64 go build -o main main.go
 ```
 
+## Sub Page -> Go Theory | Data Type System
+
+Golang has a very strong type system that allows you to do so much such as creating your own type structures but before we get into that we should define all of the data types and get a simple understanding of every data type.
+
+| Data Type   | Description                                   | Example                    | Use Case                                                     |
+|-------------|-----------------------------------------------|----------------------------|--------------------------------------------------------------|
+| `bool`      | Boolean type representing true or false values | `true`, `false`            | Storing and manipulating logical conditions                  |
+| `int`       | Signed integer type                           | `42`, `-10`, `0`           | Representing whole numbers                                   |
+| `int8`      | 8-bit signed integer type                     | `-128`, `127`              | Optimizing memory usage for smaller integer values           |
+| `int16`     | 16-bit signed integer type                    | `-32768`, `32767`          | Handling larger integer values                               |
+| `int32`     | 32-bit signed integer type                    | `-2147483648`, `2147483647`| Interacting with system calls, networking, and file systems  |
+| `int64`     | 64-bit signed integer type                    | `-9223372036854775808`, `9223372036854775807`| Dealing with very large integer values        |
+| `uint`      | Unsigned integer type                         | `0`, `255`, `1000`         | Representing positive whole numbers                          |
+| `uint8`     | 8-bit unsigned integer type                   | `0`, `255`                 | Manipulating bytes and color values                           |
+| `uint16`    | 16-bit unsigned integer type                  | `0`, `65535`               | Managing network protocols and encoding                      |
+| `uint32`    | 32-bit unsigned integer type                  | `0`, `4294967295`          | Working with large sets of unique identifiers                 |
+| `uint64`    | 64-bit unsigned integer type                  | `0`, `18446744073709551615`| Handling large numbers or bit manipulation                   |
+| `float32`   | Single-precision floating-point type          | `3.14`, `-1.23e-5`         | Representing and manipulating decimal numbers with less precision  |
+| `float64`   | Double-precision floating-point type          | `3.14159`, `-1.23456e-10`  | Handling decimal numbers with higher precision               |
+| `string`    | Sequence of characters                        | `"Hello, world!"`, `""`     | Storing and manipulating text                                |
+| `array`     | Fixed-size collection of elements              | `[1, 2, 3]`, `["apple", "banana", "cherry"]`| Working with a fixed number of related values |
+| `rune`      | Unicode code point                             | `'A'`, `'\u03A3'`          | Working with individual characters and Unicode strings       |
+| `byte`      | Alias for `uint8`, represents a single byte    | `0x41`, `255`              | Handling binary data, I/O operations, and network protocols  |
+
+
+All of these data types seem quite confusing but this can be quite easy to understand when we get a short hang of everything.
+
+> Arrays 
+
+Arrays are a very powerful data type within Go and can be used for many different things. Arrays are weird syntactically within Go but can be easy to remember. The following  sub list talks about different arrays and their use case.
+
+**String Arrays**
+
+String arrays can be defined with `[]string`. Generally speaking, all arrays within the go programming language are declared with `[]<type>` where `<type>` is replaced with the data type from the table above.
+
+String arrays look like the following.
+
+```go
+var StrArr = []string{
+	"hello world1",
+	"hello world2",
+	"hello world3",
+	"hello world4",
+}
+```
+
+**Float Arrays**
+
+Float arrays follow the same concept
+
+```go
+var FloatArr = []float64{
+	1.9909999,
+	234.9909999,
+	34.9909999,
+	3423523.9909999,
+}
+```
+
+**Integer Arrays**
+
+Like all arrays integer arrays are the same 
+
+```go
+var IntArr = []int{
+	1,
+	2,
+	3,
+	4,
+	5,
+}
+```
+
+> The interface data type
+
+The interface data type is the `any` data type of the Go programming language. This means that this data type can be anything and can be one data type of any type within the type list in Go. Interfaces are defined with `interface{}` and have their own unique fields. Below is an example of a interface array.
+
+```go
+var InterfaceArray = []interface{}{
+	"hello world",
+	1,
+	true,
+	false,
+	[]string{"hi!"},
+}
+
+```
+
+Notice how the array does not have any one specific type? That is how an interface works, it is any possible data type.
+
+> The rune data type 
+
+Runes are another confusing factor with people, for some reason it can be confusing to chomp down so lets break it down. A rune is golang's way of declaring unicdoe point. The following example prints out `65`.
+
+```go
+func main() {
+	r := rune('A')
+	println(r)
+}
+```
+
+This program outputs the value of r, but if r is a character then why is it outputting `65`? This is because A as a unicode point holds the 65th position on the ASCII table shown below.
+
+<p align="center">
+  <img src="https://github.com/TotallyNotAHaxxer/MartianDefense-Golang-MDFiles/blob/main/asciifull.gif">
+</p>
+
+
