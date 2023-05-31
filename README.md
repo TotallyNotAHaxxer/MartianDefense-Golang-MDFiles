@@ -271,6 +271,7 @@ A function as shown above can have multiple arguments, but how do you define the
 Functions have a few rules when types are used as arguments which are the following.
 
 | Rule | Description | Example |
+| ---- | ----------- | ------- |
 | Any Type | Functions can hold ANY data type | func setting(a string, b map[string]string, c []byte, d interface{}){} |
 | Main can not hold function arguments | any `main` function can not hold any parameter or argument and return nothing | main(data string) is ILLEGAL |
 | params must be named | for each argument within a function it must be named | func setting(age int, name string) |  
