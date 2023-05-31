@@ -276,7 +276,196 @@ Functions have a few rules when types are used as arguments which are the follow
 | Main can not hold function arguments | any `main` function can not hold any parameter or argument and return nothing | main(data string) is ILLEGAL |
 | params must be named | for each argument within a function it must be named | func setting(age int, name string) |  
 
+Arguments as you can see are quite simple and basic despite having some rules, lets write a program demoing how function arguments can be used
 
+```go
+package main
+
+import "fmt"
+
+func Hello(name string) {
+	message := "Hello there " + name
+	fmt.Println(message)
+}
+
+func main() {
+	Hello("ryan")
+}
+```
+
+When this program outputs we get `hello there ryan` because we used the string argument "ryan" as a replacement for name and concentrated the strings together. Note that arguments can also be defined in many different ways as well such as infinite arguments otherwise known as vardaic functions.
+
+Lets build a program that allows you to output one giant line of concentrated strings
+
+```go
+package main
+
+import "fmt"
+
+func Hello(name ...string) {
+	var message string
+	for i := 0; i < len(name); i++ {
+		message += name[i] + " ,"
+	}
+	fmt.Println(" hello there! " + message)
+}
+
+func main() {
+	Hello("ryan", "jef", "dom", "json", "alex")
+}
+```
+
+Running this code will produce a output that will concentrate all the names provided in the argument list. Note that infinite arguments MUST ALWAYS BE DEFINED AT THE END. So for example the function `func hi(name ...string, age int)` will throw the error `can only use ... with final parameter in list, COMPILER ERROR > MisplacedDotDotDot`
+
+> Functions | Multiple variables at once in arguments
+
+Functions can also use multiple variables all of one type within functions like the following.
+
+```go
+func Hello(name, rank string) {}
+```
+
+both `name` and `rank` all have to be string types when the function is called, but instead of doing `name string, rank string, player string, user string` you can concentrate that into a list of variables with one assigned type.
+
+> Functions | Returns
+
+Returns are quite simple, the most basic return of a function happens outside of its parameter list and is defined by the data type you want to return. The function below returns an integer data type after adding two parameters.
+
+```go
+package main
+
+func Add(x, y int) int {
+	return x + y
+}
+
+func main() {
+	res := Add(10, 20)
+	println(res)
+}
+```
+
+The function takes not only two input params of type integer but then returns the result by adding them together. In our main function we just declare a variable to hold the result of that function and then print it to the console.
+
+> Functions | Returns (Variable and List based)
+
+Functions can also return multiple types and even declare variables like the following function below which returns two variables of the same type
+
+```go
+package main
+
+func Add(x, y int) (res, ogval1, ogval2 int) {
+	ogval1 = x
+	ogval2 = y
+	res = x + y
+	return
+}
+
+func main() {
+	res, og1, og2 := Add(10, 20)
+	println(res, og1, og2)
+}
+```
+
+When you return variables within a function, you do not need to return direct values or variables as using the `return` keyword will just return the variables. Looking back at the anatomy, the secodn set of parenthesis is the listed or variable return set. We can also just return multiple types without having variables like so.
+
+```go
+package main
+
+func Add(x, y int) (int, int, int) {
+	ogval1 := x
+	ogval2 := y
+	res := x + y
+	return res, ogval1, ogval2
+}
+
+func main() {
+	res, og1, og2 := Add(10, 20)
+	println(res, og1, og2)
+}
+```
+
+Notice that this time we have to declare the variables with the decl operator `:=` and specify them within the return call. If you are working with more bigger functions that return larger sets of data, declaring a list of variables and types may become much more helpful. 
+
+> Functions | Anonymous functions
+
+Functions in Go can be defined using the func() keyword, and we call them typically by the name of the function. But what about anonymous functions? How do those work? What can we do with them?
+
+Anonymous functions are functions that have no name and are called directly. This means we define func() and then call it. A program below defines the use of this.
+
+```go
+package main
+
+import "fmt"
+
+func Add(x, y int) {
+	fmt.Println(
+		fmt.Sprint(x) +
+			" + " +
+			fmt.Sprint(y) +
+			" = " +
+			fmt.Sprint(x+y),
+	)
+	// Now call divide
+	func(x1, y1 int) {
+		fmt.Println(
+			fmt.Sprint(x) +
+				" / " +
+				fmt.Sprint(y) +
+				" = " +
+				fmt.Sprint(x1/y1),
+		)
+	}(x, y)
+}
+
+func main() {
+	Add(12, 20)
+}
+```
+
+This is an example of what a anonymous function looks like. The function defined is `Add` which takes two parameters of type int, it then formats the output of the calculation. Lets break this section down line by line.
+
+```go
+	fmt.Println(
+		fmt.Sprint(x) +
+			" + " +
+			fmt.Sprint(y) +
+			" = " +
+			fmt.Sprint(x+y),
+	)
+	// Now call divide
+```
+
+In this part of the brick all we are doing is a simple `x + y` operation where we add the input values and we print it to the screen. We do this by making an operation called `Sprint` which stands for `String` print to convert any data type to a string. We then concentrate the result of `Sprint(x)` with `+` to format the expression, then add the sprint of y, then an assignment operator and the final result being the operation that was sprinted. So out final message should look like `12 + 20 = 32`
+
+```go
+	// Now call divide
+	func(x1, y1 int) {
+		fmt.Println(
+			fmt.Sprint(x) +
+				" / " +
+				fmt.Sprint(y) +
+				" = " +
+				fmt.Sprint(x1/y1),
+		)
+	}(x, y)
+```
+
+This brick calls the anonymous function, anonymous functions have a way of calling and returning data types but in this case we just call it with arguments ot simulate a more advanced scenario. Generally speaking we call an anonymous function by using `func(){}()` where the first set of `()` is the param list the function takes and the second set of `()` is the argument input. We then do the same exact operation that we did before this block of code just for division. 
+
+Now lets look at a much more basic function that just outputs a hello world statement.
+
+```go
+func(){
+	println("hello world")
+}()
+```
+
+ah yes this is more readable and should give you a good understanding of what exactly a anonymous function looks like in go.
+
+
+
+
+ 
 ## Sub Page -> Go Theory | Data Type System
 
 Golang has a very strong type system that allows you to do so much such as creating your own type structures but before we get into that we should define all of the data types and get a simple understanding of every data type.
