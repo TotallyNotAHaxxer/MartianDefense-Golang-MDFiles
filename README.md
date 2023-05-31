@@ -205,6 +205,77 @@ We can now make our program build for AMD64 and Linux by issuing the following c
 GOOS=linux GOARCH=amd64 go build -o main main.go
 ```
 
+
+## Sub Page -> Go Theory | Functions
+
+Before we get into the data types of Golang we want to first be able to understand how functions work. This module will be aimed at giving you a base introduction to functions and then an intermediate example of those functions.
+
+> Functions | Basic Function Decl
+
+In order to declare functions in Golang there are multiple ways you can initalize them and even declare them, but the main one is the `func` keyword which stands for `function` similar to `fn` in rust.
+
+Below is an example of a very basic function and how you can call them.
+
+```go
+package main 
+
+import "fmt"
+
+func HelloWorld() {
+	fmt.Println("hello world")
+}
+
+func main() {
+	HelloWorld()
+}
+```
+
+This function is declared and takes no arguments, returns nothing and has no structure tag as it simply just prints hello world to the console. Now, if we wanted to go bigger we could. Lets look at the anatomy of a function in Go.
+
+> Functions | Anatomy of a function
+
+A function has an few interesting fields but the prime exist of all optional sets.
+
+```go
+func     ()      FuncName  		()	     space or ()  {}
+|         |          |			 |		|	   |
+| Decl    |          | 			 |		|	   |
+          |          | ----------	 |		|	   |
+	  Optional Struct Tags	 |----Param List	|	   |
+	                         |		   return list	   |
+			Function Name				   |Block statement
+
+// Assembled function anatomy
+
+func ()FuncName()(){}
+```
+
+Still confusing? Lets break this down then.
+
+**Function Decl**: We established that declaring a function in go requires the `func` keyword
+
+**Function Type Tags**: In golang, you can use type alliases or structures to call a function ( explanation on this later ). This is defined with () before the function name
+
+**Function Name**: Function name comes after the `func` keywords if structure tags or type tags are not within the function
+
+**Function Params / Arguments**: Functions in golang can have arguments and you declare this by delcaring the function name then a set of parenthesis
+
+**Function Returns**: Function return types in go can be declared multiple ways. If you want to declare a list of return types then you have to use () which is the list of types like `(string, int, string)` or you can just declare the type after the function parameter decl.
+
+**Function Block**: Function blocks are called and defined with right and left facing brackets. Right facing brackets define the functions start and left facing brackets define the end of a function.
+
+> Functions | Arguments 
+
+A function as shown above can have multiple arguments, but how do you define them?
+
+Functions have a few rules when types are used as arguments which are the following.
+
+| Rule | Description | Example |
+| Any Type | Functions can hold ANY data type | func setting(a string, b map[string]string, c []byte, d interface{}){} |
+| Main can not hold function arguments | any `main` function can not hold any parameter or argument and return nothing | main(data string) is ILLEGAL |
+| params must be named | for each argument within a function it must be named | func setting(age int, name string) |  
+
+
 ## Sub Page -> Go Theory | Data Type System
 
 Golang has a very strong type system that allows you to do so much such as creating your own type structures but before we get into that we should define all of the data types and get a simple understanding of every data type.
@@ -312,4 +383,77 @@ This program outputs the value of r, but if r is a character then why is it outp
   <img src="https://github.com/TotallyNotAHaxxer/MartianDefense-Golang-MDFiles/blob/main/asciifull.gif">
 </p>
 
+As you can see rune is just another way to represent unicode point. Note that the rune type can only be used for single characters and can not be more than one character or one unicode point.
 
+> The byte type 
+
+The byte type witin the programming language is easy to understand and does not have a weird understanding behind it. Bytes come in two forms which include a standard byte and a range of bytes ( array of bytes ). Below is an example of both
+
+```go
+package main
+
+import "fmt"
+
+var ShellCode = []byte{
+	0x90, 0x90, 0x90, // Example shellcode bytes
+}
+
+func main() {
+	fmt.Println(string(ShellCode))
+	r := byte('h')
+	println(r)
+}
+```
+
+As you can see the byte type can be used for many things and if we print the h character in a byte format we get `104` similar to when we work with rune. Using byte's can be super benifical when reading files, working with networks, dissecting packets or trying to parse binary data and files.
+
+## Sub Page -> Go Theory | Type 
+
+The type system we just went over but did not fully cover, one thing we missed was the type and struct keywords. In Golang, you can create your own data types using the type keyword and also create your own data type structures ussing the struct keyword. There are multiple ways to work with this but lets first break down the type keyword.
+
+> `type` basic usage | Type Aliases
+
+The type keyword allows you to create alliases to other data types which can be used to shorten the lenght of specific functions, uses, cases or even arguments. Below is an example 
+
+```go
+type UserID int
+type Username string
+
+func main() {
+    id := UserID(42)
+    username := Username("john_doe")
+    fmt.Println(id)      
+    fmt.Println(username) 
+}
+```
+
+As you can see we made UserID of type int which means we can now use it and call it as a type.
+
+> `type` different usage | New Data Types 
+
+Creating new data types can also be helpful especially when you want to work with functions or even hold sets of data. In this case we create a Celsius and Fahrenheit data type which are both float64 values.
+
+```go
+type Celsius float64
+type Fahrenheit float64
+
+func (c Celsius) ToFahrenheit() Fahrenheit {
+	return Fahrenheit(c*9/5 + 32)
+}
+
+func main() {
+	cel := Celsius(25)
+	f := cel.ToFahrenheit()
+	fmt.Println(f) // Output: 77
+}
+```
+
+We declare our types using the type keyword, their name followed by the type and then define a function that requires the Celsius type to be called which causes a function to output the Fahrenheit data type. This type of usage for types really comes in handy when we get to better and more detailed operations. It is quite simple to read the code if you are not directly new to go but can be confusing for new comers so lets break it down one last time.
+
+**Types:** We declare the types we want to use using the `type` keyword we then define the data type that new data type we are creating is holding.
+
+**Function Call**: The function in this program converts celsius to fahrenheit and in order to do that the function needs to use the Celsius data type. After the `func` keyword is defined, we place a set of parenthesis which holds the variable we will use to call the structure and then the structure name. We then declare the function name and what it is returning and return the Fahrenheit conversion algorithm with the variable `c` which again is the Celsius type which holds a float64 data type.
+
+**Main**: Our main function is the main entry point that will call the Celsius type to iniate a new value for `cel`, we then call `f` the output to the function by calling `cel.ToFahrenheit()`. 
+
+## Sub Page -> Go Theory | Struct 
