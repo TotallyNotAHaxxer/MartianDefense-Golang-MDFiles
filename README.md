@@ -787,3 +787,122 @@ func main() {
 ```
 
 In this program, we define a `Person` struct with `Name` and `Age` fields. The `UpdateUsers` function takes a pointer to a `Person` struct as an argument, along with new values for the name and age. Inside the function, we use the pointer to update the values of the structure fields. Then in the `main` function, we create a new instance of `Person` using the address-of operator (`&`) (The address-of operator in Go is represented by the & symbol. It is used to obtain the memory address of a variable or a value. ). We then print the initial values of the structure fields. Next, we call the `updatePerson` function, passing the pointer to the `Person` instance and new values. The function modifies the structure fields using the pointer. Finally, we print the updated values of the structure fields.
+
+> `Struct` | Structure Composition
+
+When working with structs in Go, you may want to use one structure that holds a variable with the value of another structure. This looks like the following.
+
+```go
+package main
+
+import "fmt"
+
+type Address struct {
+	Street  string
+	City    string
+	Country string
+}
+
+type Person struct {
+	Name    string
+	Age     int
+	Address Address
+}
+
+func main() {
+	address := Address{
+		Street:  "123 Main Street",
+		City:    "Cityville",
+		Country: "Countryland",
+	}
+	person := Person{
+		Name:    "John Doe",
+		Age:     30,
+		Address: address,
+	}
+
+	fmt.Println("Name:", person.Name)
+	fmt.Println("\nInfo \tAge:", person.Age)
+	fmt.Println("\tAddress:")
+	fmt.Println("\tStreet:", person.Address.Street)
+	fmt.Println("\tCity:", person.Address.City)
+	fmt.Println("\tCountry:", person.Address.Country)
+}
+```
+
+As you can see we create multiple variables that hold the structurs storing the data we need it to store, notice how when we get to the `Address` field in the variable `person` we fill the `Address` field with the `address` variable that holds a structure and its values apart of the `Address`.
+
+> `Struct` | Structure Tags
+
+Another use for structures is to take forms of data such as JSON, XML, YAML and using it to store those values which can be marshaled into the data structure.
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+)
+
+type Person struct {
+	Name  string `json:"name"`
+	Age   int    `json:"age"`
+	Email string `json:"email,omitempty"`
+}
+
+func main() {
+	person := Person{
+		Name:  "John Doe",
+		Age:   30,
+		Email: "johndoe@example.com",
+	}
+
+	jsonData, err := json.Marshal(person)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(jsonData))
+}
+```
+
+This is quite easy to understand but in the case that you need it to be broken down I have given a breif breakdown below.
+
+We declare our structure which has a bit of a different anatomy than a standard data type, instead this data type holds what seems to be a json value. This is known as a tagged data type which vasically defines metadata or instructions to the encoding/json package or other libraries that may use these special tags. Typically, you only see this in programs that may be using JSON to send or parse server responses, load configuration files, load settings files or is storing data in specific formats for the use of code translation. In our main function, we can see that we take our structure and specify data like normal and then finally convert it to json by calling `json.Marshal` which will convert the data as required. 
+
+Our output may be something like the following 
+
+```
+{"name":"John Doe","age":30,"email":"johndoe@example.com"}
+```
+
+> `Struct` | Method Sets 
+
+Method sets with structures is basically a way to define a function or method within a structure where that structure can only access that function. Below is an example of a program that creates a structure that utilizes method sets.
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type Circle struct {
+	Radius float64
+}
+
+func (c Circle) Area() float64 {
+	return math.Pi * c.Radius * c.Radius
+}
+
+func main() {
+	c := Circle{Radius: 10.4}
+	fmt.Println(c.Area())
+}
+```
+
+As you can see, like any normal structure we declare the variables we need inside of the circle structure and then we create a method structure to calc the area of a circle. This function can not be called without properly initializing the `Circle` structure. When we declare a valid structure and use 10.4 as the radius we can then call the function to get the area of the circle.
+
+
