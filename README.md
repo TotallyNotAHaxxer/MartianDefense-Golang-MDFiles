@@ -647,3 +647,143 @@ We declare our types using the type keyword, their name followed by the type and
 **Main**: Our main function is the main entry point that will call the Celsius type to iniate a new value for `cel`, we then call `f` the output to the function by calling `cel.ToFahrenheit()`. 
 
 ## Sub Page -> Go Theory | Struct 
+
+Structures are an amazing composite data type that allows you to define your own custom data structure. This can become helpful when building programs in Golang because it allows for developers to easily define custom data types and organize related data. 
+
+> `Struct` | Theory
+
+Structures can be easily declared with the type and struct keywords! The anatomy of the structure is the following
+
+```go		
+					 		  | <- Expression
+type      StructName       struct			 { }
+|	  | 			|			 | |
+|	  |			|			 | | 
+|	  |__			|			 | |
+|	    | Structure Name	|			 | |__structure END____
+| Type initalization		| Struct decl		 |___structure START__|
+```
+
+so putting a structure together we have 
+
+```go
+type StructName struct {
+	// Expressions
+}
+```
+
+> `Struct` | Basic Usage
+
+Using a structure for most people is quite easy when you get the hang of it! The following program uses a structure to store a username and password
+
+```go
+package main
+
+import "fmt"
+
+type Config struct {
+	Name     string
+	Password int
+}
+
+var Conf Config
+
+func init() {
+	Conf.Name = "Username"
+	Conf.Password = 334234
+}
+
+func main() {
+	fmt.Println("Username ( " + Conf.Name + " ) is password: " + fmt.Sprint(Conf.Password))
+}
+```
+
+As you can see, this program first starts off by declaring the structure and two variables; `Name of type String` and `Password of type Integer`. When the structure is declared we then see the `var Conf Config` which may be easy to pick apart but in case not, the `Conf` variable holds the Struct `Config` as a value. This is the variable we will use to globally work with the structure. We then create a pre entry point in the program where we can assign the structure variables and then the main function will print out the details.
+
+> `Struct` | Initializing Structs
+
+When we do not want to using variables, we can initialize structures using basic variables like so.
+
+```go
+package main
+
+import "fmt"
+
+type Config struct {
+	Name     string
+	Password int
+}
+
+func main() {
+	p := Config{
+		Name:     "Username",
+		Password: 2534334,
+	}
+	fmt.Println("Username: ( " + p.Name + " ) has password: " + fmt.Sprint(p.Password))
+}
+```
+
+Sometimes this can come in handy when we want to use structures under specific functions instead of just globally initializing them!
+
+> `Struct` | Anonymous structures
+
+Anonymous structures are quite easy to understand as they provide much more flexibility for their use case and work similar to anonymous functions!
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	p := struct {
+		Username string
+		Password int
+	}{
+		"Dave",
+		1233,
+	}
+	fmt.Println(p.Password)
+	fmt.Println(p.Username)
+}
+```
+
+As you can see by the initializing it can go quite the long way when you need a structure quick and easy for private use!
+
+> `Struct` | Pointer to Struct
+
+Sometimes, a function may require a structure as an argument and in order to do that we need to be sure that we can work with different structures! A program below takes a structure as a pointer and assigns new values to that structure.
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+func UpdateUsers(p *Person, name string, age int) {
+	p.Name = name
+	p.Age = age
+}
+
+func main() {
+	p := &Person{
+		Name: "John Doe",
+		Age:  30,
+	}
+
+	fmt.Println("\nBefore update:")
+	fmt.Println("\tName:", p.Name)
+	fmt.Println("\tAge:", p.Age)
+
+	UpdateUsers(p, "Jane Smith", 25)
+
+	fmt.Println("\nAfter update:")
+	fmt.Println("\tName:", p.Name)
+	fmt.Println("\tAge:", p.Age)
+}
+```
+
+In this program, we define a `Person` struct with `Name` and `Age` fields. The `UpdateUsers` function takes a pointer to a `Person` struct as an argument, along with new values for the name and age. Inside the function, we use the pointer to update the values of the structure fields. Then in the `main` function, we create a new instance of `Person` using the address-of operator (`&`) (The address-of operator in Go is represented by the & symbol. It is used to obtain the memory address of a variable or a value. ). We then print the initial values of the structure fields. Next, we call the `updatePerson` function, passing the pointer to the `Person` instance and new values. The function modifies the structure fields using the pointer. Finally, we print the updated values of the structure fields.
