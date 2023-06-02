@@ -922,6 +922,129 @@ When it comes to importing specific files or rather modules since Go does not ha
 | Importing a package but not using any of its exported symbols will cause a compilation error | N/A | `import _ "unused"` |
 | Cyclic imports are not allowed | N/A | N/A |
 
+These rules might be quite confusing so lets break it down a bit 
 
+> Import path must be enclosed in double quotes 
+
+This error means that the import path was not enclosed using `"` or `"`. Importing must be enclosed in either `""` or ` `` ` marks
+
+> Importing package must be avalible in the go module or standard library 
+
+This can mean that the module you tried to import does not exist within the standard library or does not exist within your .mod file configuration
+
+> Unused import packages 
+
+This means that you imported a package but did not use it 
+
+```go
+package main 
+
+import "fmt"
+
+func main() {
+	println("hello")
+}
+```
+
+this program called println not `fmt.Println()` so `fmt` is unused 
+
+> Importing a package but not using any of its exported symbols 
+
+same thing as unused import but instead importing as for example
+
+```
+package main 
+
+import f "fmt"
+
+func main() {
+     println("hi")
+}
+```
+
+>  Cyclic imports are not allowed
+
+This basically means that a package that depends on another package can not be imported.
+
+For example a cyclic import occurs when two or more packages depend on each other directly or indirectly this means that it creates a circular dependency where Package A imports Package B, and Package B also imports Package A, either directly or through a chain of dependencies.
+
+Importing rules are pretty easy to understand but can become a pain if you do not exactly know what you are and arent using.
+
+
+> `Modules` | Creating Packages
+
+When it comes to creating modules in Golang, it can be quite confusing for people so lets walk through a small module that allows you to auto calculate specific numbers. 
+
+We have a file tree that looks like this 
+
+```
+Project
+├── go.mod
+├── main.go
+└── Modules
+    ├── Add.go
+    └── Sub.go
+
+1 directory, 4 files
+```
+
+We first notice that there is a `go.mod` file within the directory tree, how did we get that file? In order to make project files or modules we must first create a go.mod file. The program we are going to be building is a simple calculator that can add and subtract two numbers `x` and `y`. With that information, we want our main module to be `Calc` thus the command `go mod init Calc` which will create a `go.mod` file that looks like the one below.
+
+```go
+module Calc
+
+go 1.17
+```
+
+The module is the module name in this case Calc and the `go 1.17` is the version of the programming language. Simple file, now what does this mean? This means that anytime we import a filepath or module we need to use this filepath to import a module. So, within our go.mod file we need to import "Calc/Modules" as we can not directly import the "Modules" file path if it is not assigned the module within the `go.mod` file. Lets take a peek at our `main.go` file and see whats inside.
+
+
+```go
+package main
+
+import (
+	Caclulation_Module "Calc/Modules"
+	"fmt"
+)
+
+func main() {
+	r1 := Caclulation_Module.Add(20, 30)
+	r2 := Caclulation_Module.Subtract(20, 30)
+	fmt.Println("Added      | 20 + 30 = ", r1)
+	fmt.Println("Subtracted | 20 / 30 = ", r2)
+}
+```
+
+When we look at this file we see that we are importing the `Calc/Modules` package with the name `Calculation_Module` which is how we will call functions or variables from those packages.
+
+We have two functions corresponding to our file names which are called `Add` and `Subtract` which will add and subtract two values. When we look in both files we see the following.
+
+**Add.go**
+
+```go
+package Calculator
+
+func Add(x, y int) int {
+	return x + y
+}
+```
+
+**Sub.go**
+
+```go
+package Calculator
+
+func Subtract(x, y int) int {
+	return x - y
+}
+```
+
+Notice how each file has the same package name `Calculator`? This is because Go wants you to add the name of the package that is defined within that same exact directory, if we were to create a folder for each individual package or source code file then we could add individual names but then we would need to change our `main.go` file to import both of those individual sub paths.
+
+Another note is that you see how each function starts with a capital letter? Golang will only allow you to use functions, variables, structures, imports etc ONLY if they start with a capital letter. This is because Golang only wants to export specific groups rather than everything. This allows the developer to have more control over what they want to be exported into the primary environment. You will also see this in every standard library that Golang has, every function or variable called will have a capital letter at the start of it.
+
+> `Modules` | Using third party packages 
+
+Something quite amazing about go is that it does not require a direct package installer like PyPi or Gem or even specific domain names or services to be used. Instead, golang will be able to download a specific package as long as it has a go.mod file within its root, this means that files can be downloaded from quite a large variety of hosting services. 
 
 
