@@ -1045,6 +1045,80 @@ Another note is that you see how each function starts with a capital letter? Gol
 
 > `Modules` | Using third party packages 
 
-Something quite amazing about go is that it does not require a direct package installer like PyPi or Gem or even specific domain names or services to be used. Instead, golang will be able to download a specific package as long as it has a go.mod file within its root, this means that files can be downloaded from quite a large variety of hosting services. 
+Something quite amazing about go is that it does not require a direct package installer like PyPi or Gem or even specific domain names or services to be used. Instead, golang will be able to download a specific package as long as it has a go.mod file within its root, this means that files can be downloaded from quite a large variety of hosting services. The program shown below uses the gopacket third party library to capture packets and print them out!
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
+)
+
+func main() {
+	// Define the network interface to capture packets from
+	device := "eth0"
+
+	// Open the device for packet capture
+	handle, err := pcap.OpenLive(device, 65536, true, pcap.BlockForever)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer handle.Close()
+
+	// Set packet filter (optional)
+	filter := "tcp and port 80"
+	if err := handle.SetBPFFilter(filter); err != nil {
+		log.Fatal(err)
+	}
+
+	// Start capturing packets
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+
+	// Process captured packets
+	for packet := range packetSource.Packets() {
+		fmt.Println(packet)
+	}
+}
+```
+
+But how do we install this library? We can use a command known as `go get` to install this library!
+
+`go get github.com/google/gopacket`
+
+this command will install it and add it to your `go.sum` file which looks like the one shown below!
+
+```go
+github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=
+github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=
+golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
+golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
+golang.org/x/lint v0.0.0-20200302205851-738671d3881b/go.mod h1:3xt1FjdF8hUf6vQPIChWIBhFzV8gjjsPE/fR3IyQdNY=
+golang.org/x/mod v0.1.1-0.20191105210325-c90efee705ee/go.mod h1:QqPTAvyqsEbceGzBzNggFXnrqF1CaUcvgkdR5Ot7KZg=
+golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
+golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.8.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/term v0.8.0/go.mod h1:xPskH00ivmX89bAKVGSKKtLOWNx2+17Eiy94tnKShWo=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+golang.org/x/tools v0.0.0-20200130002326-2f3ba24bd6e7/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
+golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+```
+
+what are all of these doing here? Well, third party packages rely on other third party packages which is why we 
+see so many different packages here! But you may be confused why the go.sum file contains cryptographic hashes within each package. Well, golang does this to make sure that the original information has not been tampered with since it has been downloaded and added to the repo. These hashes can basically allow golang to verify that information. Go does this so it can provide stronger guarantees of package integrity and security in turn it helps prevent potential attacks where an adversary might try to inject malicious code into a package or intercept and modify the package during download.
+
+
+
+
+
+
+
 
 
