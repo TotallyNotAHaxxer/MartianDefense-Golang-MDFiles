@@ -906,3 +906,22 @@ func main() {
 As you can see, like any normal structure we declare the variables we need inside of the circle structure and then we create a method structure to calc the area of a circle. This function can not be called without properly initializing the `Circle` structure. When we declare a valid structure and use 10.4 as the radius we can then call the function to get the area of the circle.
 
 
+## Sub Page -> Go Modules
+
+When it comes to writing bigger projects in language's like Golang, you might find yourself needing to use multiple files, this module will help you understand the structure of modules in golang and how to properly use them. This module will also contain information over the rule sets.
+
+> `Modules` | Rules
+
+When it comes to importing specific files or rather modules since Go does not have a direct "concept of files", you need to follow rules. These rules help the compiler understand what you are trying to create and what you are trying to achomplish by importing what. Now, below I have named a chart of the primary rules for importing modules in Go.
+
+| Rule | Compiler Error | Example Error |
+| --- | --- | --- |
+| Import path must be enclosed in double quotes | `import "mypackage"` | `import mypackage` |
+| Imported package must be available in the Go module or standard library | `import "fmt"` | `import "nonexistent"` |
+| Unused imported packages result in a compilation error | N/A | `import "unused"` |
+| Importing a package but not using any of its exported symbols will cause a compilation error | N/A | `import _ "unused"` |
+| Cyclic imports are not allowed | N/A | N/A |
+
+
+
+
