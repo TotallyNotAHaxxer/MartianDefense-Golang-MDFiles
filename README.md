@@ -1114,11 +1114,476 @@ golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8T
 what are all of these doing here? Well, third party packages rely on other third party packages which is why we 
 see so many different packages here! But you may be confused why the go.sum file contains cryptographic hashes within each package. Well, golang does this to make sure that the original information has not been tampered with since it has been downloaded and added to the repo. These hashes can basically allow golang to verify that information. Go does this so it can provide stronger guarantees of package integrity and security in turn it helps prevent potential attacks where an adversary might try to inject malicious code into a package or intercept and modify the package during download.
 
+Now we can easily use these third party packages! 
+
+# Module (GoSecurity Related Development) 
+
+This module will talk about specific use case's for the Go programming language and explain specific programs that will help you better analyze everything. For context, this will all be split into their own sub sections based on their type of usage or topic. For example, forensics will have its own section ( file forensics ) where the tree will look something like this.
+
+```
+GoSecurity
+	|
+	|- Forensics
+		| File catching
+		| File Parsing
+		| File checking
+	|- Web Utils
+		| HTTP requests
+		| Following redirect 
+		| Following Brokenb 
+	...
+```
+
+As this structure works much better for organization than just shoving everything into one single file.
+
+## Sub Page | Go File Forensics
+
+File forensics is quite a large part of digital forensics, sometimes, you do not need to run the biggest tool to detect a file as you may just want something that can detect specific file headers or even specific signature. The list of programs in this module will allow you to inspect or categorize specific files much easily!
+
+> File Forensics | Locating ZIP / Archives inside of images
+
+Locating ZIP files is something that always confuses people, why is it required? why would a digital forensics expert need to know how to do it? In the case of malware or even general scenarios, we may need to check if ZIP's exist in images as images may be used to sneak past security measures. To do so, we can use the following code.
+
+```go
+package main
 
 
+import (
+   "bufio"
+   "bytes"
+   "fmt"
+   "log"
+   "os"
+)
+
+// Automate error checking
+func CE(x error) {
+   if x != nil {
+       log.Fatal(x)
+   }
+}
 
 
+func VerifyZipSig(k string) {
+   sig := `\x4b\x03\x04` // ZIP / Archive signature (0x4b,0x03, 0x04)
+   fmt.Printf("[%s]---[%s] Is being checked for a ZIP signature \n", "Debug", sig)
+   f, x := os.Open(k) // Open file
+   CE(x) // Check for error
+   defer f.Close() // Close the file when the block of code is done executing
+   buffer := bufio.NewReader(f) // create a new reader
+   stat, _ := f.Stat() // stat the file to grab the files size
+   for l := int64(0); l < stat.Size(); l++ { // itterate over the size
+       b, x := buffer.ReadByte() // read the byte
+       CE(x) // check for an error
+       if b == '\x50' { // check if the byte is 0x50 ( if the first byte is '\x50' before performing the more expensive buffer.Peek(3) operation, the code can quickly identify that a potential ZIP signature might exist in the file. This check helps to reduce unnecessary calls to buffer.Peek(3) and improve the efficiency of the overall search process. )
+           BS := make([]byte, 3) // Create the storage and buffer for the signature
+           BS, x = buffer.Peek(3) 
+           CE(x) // Check error
+           if bytes.Equal(BS, []byte{'\x4b', '\x03', '\x04'}) {
+               fmt.Println("File [ ", k, " ] Contains a ZIP file")
+           } // Check and make sure that the ZIP signature accutally exists
+       }
+   }
+}
 
 
+// Main programatic entry point
+func main() {
+   if len(os.Args) == 0 { // os arguments
+       fmt.Printf("Usage: %s image_file...", os.Args[0])
+   } else {
+       for _, f := range os.Args[1:] { // get all files from the argument list 'go run main.go file1.png file2.png file3.jpg ....'
+           VerifyZipSig(f) // call function
+       }
+   }
+}
+```
+
+This program works by scanning over each byte within the file or image and then compares it to the byte array for the signature of a ZIP file. If it is found it will say that the given file followed by its name does in fact contain a zip signature. If the file does contain a ZIP signature you can use 7z to extract the ZIP file.
+
+> File Forensics | Cuting out sections of images 
+
+When it comes to digital forensics specifically files, it may come in handy one day where you need to just slice an image in half or even cut out otherwise known as `carve` a part of a file out to make sure you are parsing a specific bit. This allows you to be much more percise when it comes to your investigations. The program below will do so but will allow you to cut from a starting point to an ending point.
+
+```go
+package main
+
+import (
+   "fmt"
+   "io/ioutil"
+   "log"
+   "os"
+)
+
+// Stop cutting at...
+var endB = []byte{0x00, 0x00}
+
+var startb = []byte{
+       0x5b, 0xce, 0xb7,
+       0x14, 0x0c, 0x00,
+       0x00, 0x00, 0x0c,
+       0x00, 0x00, 0x00,
+       0x0d, 0x00, 0x00,
+       0x00,
+} // Define the starting bytes to cut
+
+// Automate errors
+func CE(msg string, x error) {
+   if x != nil {
+       log.Fatal(msg + " -> " + fmt.Sprint(x))
+   }
+}
+
+// Carving function
+func Carve(file string) {
+   in, x := ioutil.ReadFile(file) // Read the file into bytes
+   CE("Could not read the input file  ", x) // Check error
+   var start, end int // define start and end points
+   for i := 0; i < len(in)-len(startb); i++ { // itterate over the length
+       if string(in[i:i+len(startb)]) == string(startb) { // calculate the start
+           start = i + len(startb)
+           break
+       }
+   }
+   for i := len(in) - len(endB); i > 0; i-- { // itterate over the length
+       if string(in[i:i+len(endB)]) == string(endB) { // calculate the end
+           end = i
+           break
+       }
+   } // check if the start and end are within bounds
+   if start >= end {
+       fmt.Println("File signature not found")
+       os.Exit(0)
+   }
+   outputFile, x := os.Create("output.jpg") // create output file
+   CE("Could not CREATE the output file ", x) // check for error
+   defer outputFile.Close() // close file at the end of the brick
+   _, x = outputFile.Write(in[start:end]) // write the cut start to the cutting end point
+   CE("Could not WRITE output file ", x) // check for the error
+   fmt.Println("File carved successfully") // output the write message OK
+}
+
+
+func main() {
+   if len(os.Args) == 0 {
+       fmt.Println("Usage: " + os.Args[0] + " input_file.jpg")
+   } else {
+       Carve(os.Args[1])
+   }
+}
+```
+
+This program you will need to tweak a bit, but here is how we might use this tool. Say we have a picture that has a ZIP file inside of it. We can demo this with an image dump shown below.
+
+```
+00000000  50 4b 03 04 14 03 00 00  00 00 85 91 bc 56 00 00  |PK...........V..|
+00000010  00 00 00 00 00 00 00 00  00 00 0c 00 00 00 43 6f  |..............Co|
+00000020  6d 70 72 65 73 73 44 69  72 2f 50 4b 03 04 14 03  |mpressDir/PK....|
+00000030  00 00 08 00 1a 93 b8 56  01 a1 cd f1 3f 00 00 00  |.......V....?...|
+00000040  7e 00 00 00 16 00 00 00  43 6f 6d 70 72 65 73 73  |~.......Compress|
+00000050  44 69 72 2f 62 61 6e 6e  65 72 2e 74 78 74 e3 04  |Dir/banner.txt..|
+00000060  02 85 47 53 fa 1f 4d 69  7c 34 65 32 17 88 fb 68  |..GS..Mi|4e2...h|
+00000070  4a 33 10 29 00 31 88 ab  00 04 20 49 04 9a 0d 12  |J3.).1.... I....|
+00000080  d6 02 0a 03 31 88 04 72  21 7c b0 38 50 03 10 83  |....1..r!|.8P...|
+00000090  09 88 04 5c 09 94 d6 82  99 0a 64 01 00 50 4b 03  |...\......d..PK.|
+000000a0  04 14 03 00 00 08 00 87  7a bc 56 50 9b 38 0b 30  |........z.VP.8.0|
+000000b0  00 00 00 89 00 00 00 14  00 00 00 43 6f 6d 70 72  |...........Compr|
+000000c0  65 73 73 44 69 72 2f 6d  61 69 6e 2e 74 78 74 e3  |essDir/main.txt.|
+000000d0  e2 04 02 05 05 85 e0 ec  4a 05 9f cc bc 54 05 cf  |........J....T..|
+000000e0  bc 92 d4 a2 82 a2 54 20  59 a3 10 a6 60 a0 67 a0  |......T Y...`.g.|
+000000f0  67 0a 53 84 4a 53 09 14  a7 26 03 6d e3 02 00 50  |g.S.JS...&.m...P|
+00000100  4b 01 02 3f 03 14 03 00  00 00 00 85 91 bc 56 00  |K..?..........V.|
+00000110  00 00 00 00 00 00 00 00  00 00 00 0c 00 24 00 00  |.............$..|
+00000120  00 00 00 00 00 10 80 ed  41 00 00 00 00 43 6f 6d  |........A....Com|
+00000130  70 72 65 73 73 44 69 72  2f 0a 00 20 00 00 00 00  |pressDir/.. ....|
+00000140  00 01 00 18 00 80 c2 e1  71 b1 91 d9 01 80 b4 ba  |........q.......|
+00000150  6a b1 91 d9 01 80 c2 e1  71 b1 91 d9 01 50 4b 01  |j.......q....PK.|
+00000160  02 3f 03 14 03 00 00 08  00 1a 93 b8 56 01 a1 cd  |.?..........V...|
+00000170  f1 3f 00 00 00 7e 00 00  00 16 00 24 00 00 00 00  |.?...~.....$....|
+00000180  00 00 00 20 80 a4 81 2a  00 00 00 43 6f 6d 70 72  |... ...*...Compr|
+00000190  65 73 73 44 69 72 2f 62  61 6e 6e 65 72 2e 74 78  |essDir/banner.tx|
+000001a0  74 0a 00 20 00 00 00 00  00 01 00 18 00 80 bb 6a  |t.. ...........j|
+000001b0  8e 8e 8e d9 01 80 b3 bb  5e 8e 8e d9 01 00 ff 17  |........^.......|
+000001c0  70 b1 91 d9 01 50 4b 01  02 3f 03 14 03 00 00 08  |p....PK..?......|
+000001d0  00 87 7a bc 56 50 9b 38  0b 30 00 00 00 89 00 00  |..z.VP.8.0......|
+000001e0  00 14 00 24 00 00 00 00  00 00 00 20 80 a4 81 9d  |...$....... ....|
+000001f0  00 00 00 43 6f 6d 70 72  65 73 73 44 69 72 2f 6d  |...CompressDir/m|
+00000200  61 69 6e 2e 74 78 74 0a  00 20 00 00 00 00 00 01  |ain.txt.. ......|
+00000210  00 18 00 80 14 11 6d 99  91 d9 01 80 14 11 6d 99  |......m.......m.|
+00000220  91 d9 01 80 c2 e1 71 b1  91 d9 01 50 4b 05 06 00  |......q....PK...|
+00000230  00 00 00 03 00 03 00 2c  01 00 00 ff 00 00 00 00  |.......,........|
+00000240  00                                                |.|
+00000241
+```
+
+we can take specific bytes we want to carve out and run this program. Say we want to carve anything from `f1 3f 00 00 00 7e 00 00  00 16 00 24 00 00 00 00` to `0x00` which is the end of the file in this case. We can replace our current hex with the following
+
+```go
+var endB = []byte{0x00}
+
+var startb = []byte{
+	0xf1, 0x3f, 0x00, 
+	0x00, 0x00, 0x7e, 
+	0x00, 0x00, 0x00, 
+	0x16, 0x00, 0x24, 
+	0x00, 0x00, 0x00, 
+	0x00} // Define the starting bytes to cut
+```
+
+When we run the program and get our output we should get something like
+
+```
+ f1 3f 00 00 00 7e 00 00  00 16 00 24 00 00 00 00  |.?...~.....$....|
+00000180  00 00 00 20 80 a4 81 2a  00 00 00 43 6f 6d 70 72  |... ...*...Compr|
+00000190  65 73 73 44 69 72 2f 62  61 6e 6e 65 72 2e 74 78  |essDir/banner.tx|
+000001a0  74 0a 00 20 00 00 00 00  00 01 00 18 00 80 bb 6a  |t.. ...........j|
+000001b0  8e 8e 8e d9 01 80 b3 bb  5e 8e 8e d9 01 00 ff 17  |........^.......|
+000001c0  70 b1 91 d9 01 50 4b 01  02 3f 03 14 03 00 00 08  |p....PK..?......|
+000001d0  00 87 7a bc 56 50 9b 38  0b 30 00 00 00 89 00 00  |..z.VP.8.0......|
+000001e0  00 14 00 24 00 00 00 00  00 00 00 20 80 a4 81 9d  |...$....... ....|
+000001f0  00 00 00 43 6f 6d 70 72  65 73 73 44 69 72 2f 6d  |...CompressDir/m|
+00000200  61 69 6e 2e 74 78 74 0a  00 20 00 00 00 00 00 01  |ain.txt.. ......|
+00000210  00 18 00 80 14 11 6d 99  91 d9 01 80 14 11 6d 99  |......m.......m.|
+00000220  91 d9 01 80 c2 e1 71 b1  91 d9 01 50 4b 05 06 00  |......q....PK...|
+00000230  00 00 00 03 00 03 00 2c  01 00 00 ff 00 00 00 00  |.......,........|
+00000240  00                                                |.|
+00000241
+```
+cut out in the resulting file.
+
+
+> File Forensics | Hex Conversion
+
+This is not really a file forensics thing but may become helpful to you. Sometimes, manually converting thousands of hex points for forensics, shellcode etc can be quite boring. The following utility will allow you to convert these bytes into actual hex.
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"strings"
+)
+
+func main() {
+	// Input code
+	input := os.Args[1]
+	// Split the input by space to get individual codes
+	codes := strings.Split(input, " ")
+	// Convert each code to its hex representation
+	var hexCodes []string
+	for _, code := range codes {
+		hexCode := fmt.Sprintf("0x%s", code)
+		hexCodes = append(hexCodes, hexCode)
+	}
+	// Print the hex representation
+	fmt.Println(strings.Join(hexCodes, ", "))
+}
+```
+
+**Testing**
+
+When we test the program with `go run hexutil.go "f1 3f 00 00 00 7e 00 00 00 16 00 24 00 00 00 00"` we get `0xf1, 0x3f, 0x00, 0x00, 0x00, 0x7e, 0x00, 0x00, 0x00, 0x16, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00`
+
+> File Forensics | Getting mime type
+
+Sometimes, the OS can not detect a specific file type, this is where file checking tools come in handy. Of course, tools like `file` exist on linux to get the file type, but this tool may work in any other environment where you may not be on linux or in some wild instance where `file` is not directly implemented. The program below will catch a file's mime type based on structured data.
+
+```go
+package main
+
+
+import (
+   "bytes"
+   "fmt"
+   "io/ioutil"
+   "os"
+   "strings"
+)
+
+
+type Signatures struct {
+   Sign   string
+   Sufix  string
+   Format string
+}
+
+var Sig = []Signatures{
+	{`62706C69`, `*.bplist`, `Binary Property List`},
+	{`006E1EF0`, `*.ppt`, `PPT`},
+	{`A0461DF0`, `*.ppt`, `PPT`},
+	{`ECA5C100`, `*.doc`, `Doc file`},
+	{`474946`, `*.gif`, `GIF files`},
+	{`GIF89a`, `*.gif`, `GIF files`},
+	{`FFD8FF`, `*.jpg`, `JPEG files`},
+	{`JFIF`, `*.jpg`, `JPEG files`},
+	{`504B03`, `*.zip`, `ZIP files`},
+	{`LfLe`, `*.evt`, `Event file`},
+	{`38425053`, `*.psd`, `Photoshop file`},
+	{`8BPS`, `*.psd`, `Photoshop file`},
+	{`4D5A`, `*.ocx`, `Active X`},
+	{`415649204C495354`, `*.avi`, `AVI file`},
+	{`AVI LIST`, `*.avi`, `AVI file`},
+	{`57415645666D7420`, `*.wav`, `WAV file`},
+	{`WAVEfmt`, `*.wav`, `WAV file`},
+	{`25504446`, `*.pdf`, `PDF files`},
+	{`%PDF`, `*.pdf`, `PDF files`},
+	{`000100005374616E64617264204A6574204442`, `*.mdb`, `Microsoft database`},
+	{`Standard Jet DB`, `*.mdb`, `Microsoft database`},
+	{`2142444E`, `*.pst`, `PST file`},
+	{`!BDN`, `*.pst`, `PST file`},
+	{`4D6963726F736F66742056697375616C2053747564696F20536F6C7574696F6E2046696C65`, `*.sln`, `Microsft SLN file`},
+	{`Microsoft Visual Studio Solution File`, `*.sln`, `Microsft SLN file`},
+	{`504B030414000600`, `*.docx`, `Microsoft DOCX file`},
+	{`504B030414000600`, `*.pptx`, `Microsoft PPTX file`},
+	{`504B030414000600`, `*.xlsx`, `Microsoft XLSX file`},
+	{`504B0304140008000800`, `*.xlsx`, `Java JAR file`},
+	{`0908100000060500`, `*.xls`, `XLS file`},
+	{`D0CF11E0A1B11AE1`, `*.msi`, `MSI file`},
+	{`D0CF11E0A1B11AE1`, `*.doc`, `DOC`},
+	{`D0CF11E0A1B11AE1`, `*.xls`, `Excel`},
+	{`D0CF11E0A1B11AE1`, `*.vsd`, `Visio`},
+	{`D0CF11E0A1B11AE1`, `*.ppt`, `PPT`},
+	{`0A2525454F460A`, `*.pdf`, `PDF file`},
+	{`.%%EOF.`, `*.pdf`, `PDF file`},
+	{`4040402000004040`, `*.hlp`, `HLP file`},
+	{`465753`, `*.swf`, `SWF file`},
+	{`FWS`, `*.swf`, `SWF file`},
+	{`CWS`, `*.swf`, `SWF file`},
+	{`494433`, `*.mp3`, `MP3 file`},
+	{`ID3`, `*.mp3`, `MP3 file`},
+	{`MSCF`, `*.cab`, `Cab file`},
+	{`0x4D534346`, `*.cab`, `Cab file`},
+	{`ITSF`, `*.chm`, `Compressed Help`},
+	{`49545346`, `*.chm`, `Compressed Help`},
+	{`4C00000001140200`, `*.lnk`, `Link file`},
+	{`4C01`, `*.obj`, `OBJ file`},
+	{`4D4D002A`, `*.tif`, `TIF graphics`},
+	{`MM`, `*.tif`, `TIF graphics`},
+	{`000000186674797033677035`, `*.mp4`, `MP4 Video`},
+	{`ftyp3gp5`, `*.mp4`, `MP4 Video`},
+	{`0x00000100`, `*.ico`, `Icon file`},
+	{`300000004C664C65`, `*.evt`, `Event file`},
+	{`Rar!`, `*.rar`, `RAR file`},
+	{`526172211A0700`, `*.rar`, `RAR file`},
+	{`52657475726E2D506174683A20`, `*.eml`, `EML file`},
+	{`Return-Path:`, `*.eml`, `EML file`},
+	{`6D6F6F76`, `*.mov`, `MOV file`},
+	{`moov`, `*.mov`, `MOV file`},
+	{`7B5C72746631`, `*.rtf`, `RTF file`},
+	{`{\rtf1`, `*.rtf`, `RTF file`},
+	{`89504E470D0A1A0A`, `*.png`, `PNG file`},
+	{`PNG`, `*.png`, `PNG file`},
+	{`C5D0D3C6`, `*.eps`, `EPS file`},
+	{`CAFEBABE`, `*.class`, `Java class file`},
+	{`D7CDC69A`, `*.WMF`, `WMF file`},
+}
+
+func main() {
+   if len(os.Args) == 0 {
+       fmt.Printf("Usage: %s unknownfile... ", os.Args[0])
+   } else {
+       for _, file := range os.Args[1:] {
+           f, _ := ioutil.ReadFile(file) // skip bad files
+           for _, v := range Sig {
+               if strings.HasSuffix(file, v.Sufix) || bytes.Contains(f, []byte(v.Sign)) {
+                   fmt.Println("File [ " + file + " ] was picked up as a [ " + v.Format + " ] using symbol < " + fmt.Sprint([]byte(v.Sign)) + " > ")
+                   continue
+               }
+           }
+       }
+   }
+}
+```
+
+This list can be improved but this is a good example of how you might do this.
+
+> File Forensics | PE File forensics 
+
+File forensics may not just be for specific file groups but rather file types. Take this program that parsers and grabs values for PE files
+
+```go
+package main
+
+import (
+	"debug/pe"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"log"
+	"os"
+)
+
+var (
+	SizeofOptionalHeader32 = uint16(binary.Size(pe.OptionalHeader32{}))
+	SizeofOptionalHeader64 = uint16(binary.Size(pe.OptionalHeader64{}))
+	X32                    pe.OptionalHeader32
+	X64                    pe.OptionalHeader64
+)
+
+func CE(x error) {
+	if x != nil {
+		log.Fatal(x)
+	}
+}
+
+func main() {
+	f, x := os.Open(os.Args[0])
+	CE(x)
+	PEFILE, x := pe.NewFile(f)
+	CE(x)
+	defer f.Close()
+	defer PEFILE.Close()
+	HEAD := make([]byte, 96)
+	so := make([]byte, 4)
+	_, x = f.Read(HEAD)
+	CE(x)
+	peoffset := int64(binary.LittleEndian.Uint32(HEAD[0x3c:]))
+	f.ReadAt(so[:], peoffset)
+	sr := io.NewSectionReader(f, 0, 1<<63-1)
+	_, x = sr.Seek(peoffset+4, io.SeekStart)
+	CE(x)
+	binary.Read(sr, binary.LittleEndian, &PEFILE.FileHeader)
+	switch PEFILE.FileHeader.SizeOfOptionalHeader {
+	case SizeofOptionalHeader32:
+		binary.Read(sr, binary.LittleEndian, &X32)
+	case SizeofOptionalHeader64:
+		binary.Read(sr, binary.LittleEndian, &X64)
+	}
+	fmt.Printf("Magic byte                      : %s%s\n", string(HEAD[0]), string(HEAD[1]))
+	fmt.Printf("LFA_NEW Value                   : %s\n", string(so))
+	fmt.Printf("Architecture                    : %#x\n", PEFILE.FileHeader.Machine)
+	fmt.Printf("Section Count                   : %#x\n", PEFILE.FileHeader.NumberOfSections)
+	fmt.Printf("Sizeof Op Header                : %#x\n", PEFILE.FileHeader.SizeOfOptionalHeader)
+	fmt.Printf("Num of section field offsets    : %#x\n", peoffset+6)
+	fmt.Printf("Section Table offset            : %#x\n", peoffset+0xF8)
+	for _, sn := range PEFILE.Sections {
+		fmt.Printf("|>>> Discovered Section %s\n", sn.Name)
+		fmt.Printf("\tSection Characteristics              | %#x\n", sn.Characteristics)
+		fmt.Printf("\tSection Virtual Size                 | %#x\n", sn.VirtualSize)
+		fmt.Printf("\tSection Virtual Offset               | %#x\n", sn.VirtualAddress)
+		fmt.Printf("\tSection Raw Size                     | %#x\n", sn.Size)
+		fmt.Printf("\tSection Raw Offset to Data           |%#x\n", sn.Offset)
+		fmt.Printf("\tSection Append Offset (Next Section) | %#x\n", sn.Offset+sn.Size)
+	}
+	fmt.Printf("Entry Point                | %#x\n", X32.AddressOfEntryPoint)
+	fmt.Printf("Image Base                 | %#x\n", X32.ImageBase)
+	fmt.Printf("Size of image              | %#x\n", X32.SizeOfImage)
+	fmt.Printf("Section alignment          | %#x\n", X32.SectionAlignment)
+	fmt.Printf("File attachment            | %#x\n", X32.FileAlignment)
+	fmt.Printf("File Characteristics       | %#x\n", PEFILE.FileHeader.Characteristics)
+	fmt.Printf("Size of headers            | %#x\n", X32.SizeOfHeaders)
+	fmt.Printf("Checksum                   | %#x\n", X32.CheckSum)
+	fmt.Printf("Machine                    | %#x\n", PEFILE.FileHeader.Machine)
+	fmt.Printf("Subsystem                  | %#x\n", X32.Subsystem)
+	fmt.Printf("DLL Characteristics        | %#x\n", X32.DllCharacteristics)
+}
+```
+
+There are many more advanced ways we can parse this information but this is another good example of how go allows you to quickly execute operations like this.
+
+## Sub Page | Go Web
+
+Web based porgrams in go seem to be getting more and more popular, maybe because of how easy it is to work with go on its web end. Either way, this section will give you some good programs and idea's to work with Go a bit more.
 
 
