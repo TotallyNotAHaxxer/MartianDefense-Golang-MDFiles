@@ -1647,6 +1647,226 @@ func main() {
 
 This program is very easy to understand as we can see we just call base32 an base64 libraries. 
 
-Cryptography / Encoding | Ciphers (Rot13, Beacon Cipher, Vig
+> Cryptography / Encoding | Ciphers (Vigenere, Beacon Cipher)
+
+Ciphers are another big part of the cyber security realm especially if you may need to make a secret message and transfer it to someone in a file. However, unlike encryption, ciphers despite being cryptographic can become easily reversed. A program below is going to decode both the vigenere and beacon cipher after generating cipher text.
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// Beacon Cipher
+func BeaconEncode(message string) string {
+	result := ""
+	for i := 0; i < len(message); i++ {
+		char := message[i]
+		if char >= 'A' && char <= 'Z' {
+			char = byte((int(char-'A')+1)%26 + int('A'))
+		} else if char >= 'a' && char <= 'z' {
+			char = byte((int(char-'a')+1)%26 + int('a'))
+		}
+		result += string(char)
+	}
+	return result
+}
+
+func BeaconDecode(ciphertext string) string {
+	result := ""
+	for i := 0; i < len(ciphertext); i++ {
+		char := ciphertext[i]
+		if char >= 'A' && char <= 'Z' {
+			char = byte((int(char-'A')-1+int('Z')+1-int('A'))%26 + int('A'))
+		} else if char >= 'a' && char <= 'z' {
+			char = byte((int(char-'a')-1+int('z')+1-int('a'))%26 + int('a'))
+		}
+		result += string(char)
+	}
+	return result
+}
+
+// Vigenere Cipher
+func VigenereEncode(message string) string {
+	result := ""
+	for i := 0; i < len(message); i++ {
+		char := message[i]
+		if char >= 'A' && char <= 'Z' {
+			char = byte((int(char-'A')+i)%26 + int('A'))
+		} else if char >= 'a' && char <= 'z' {
+			char = byte((int(char-'a')+i)%26 + int('a'))
+		}
+		result += string(char)
+	}
+	return result
+}
+
+func VigenereDecode(ciphertext string) string {
+	result := ""
+	for i := 0; i < len(ciphertext); i++ {
+		char := ciphertext[i]
+		if char >= 'A' && char <= 'Z' {
+			char = byte((int(char-'A')-i+int('Z')+1-int('A'))%26 + int('A'))
+		} else if char >= 'a' && char <= 'z' {
+			char = byte((int(char-'a')-i+int('z')+1-int('a'))%26 + int('a'))
+		}
+		result += string(char)
+	}
+	return result
+}
+
+func main() {
+	messageA := "foobar"
+	messageB := "Hello, World!"
+	beaconEncoded := BeaconEncode(messageA)
+	fmt.Printf("Beacon Encoded: %s\n", beaconEncoded)
+	beaconDecoded := BeaconDecode(beaconEncoded)
+	fmt.Printf("Beacon Decoded: %s\n", beaconDecoded)
+	vigenereEncoded := VigenereEncode(messageB)
+	fmt.Printf("Vigenere Encoded: %s\n", vigenereEncoded)
+	fmt.Printf("Vigenere Decoded: %s\n", VigenereDecode(vigenereEncoded))
+}
+```
+
+> Cryptography / Encodings | Ciphers (Rot13)
+
+```go
+package main
+
+import "fmt"
+
+func Rot13(char byte) byte {
+	if char >= 'A' && char <= 'Z' {
+		return (char-'A'+13)%26 + 'A'
+	} else if char >= 'a' && char <= 'z' {
+		return (char-'a'+13)%26 + 'a'
+	}
+	return char
+}
+
+func Rot13Encode(message string) string {
+	encoded := ""
+	for _, char := range message {
+		encoded += string(Rot13(byte(char)))
+	}
+	return encoded
+}
+
+func Rot13Decode(ciphertext string) string {
+	decoded := ""
+	for _, char := range ciphertext {
+		decoded += string(Rot13(byte(char)))
+	}
+	return decoded
+}
+
+func main() {
+	messageA := "Hello, World!";
+	encoded := Rot13Encode(messageA)
+	fmt.Println("Encoded [Rot13]:", encoded)
+	decoded := Rot13Decode(encoded)
+	fmt.Println("Decoded [Rot13]:", decoded)
+}
+```
+
+> Cryptography / Encoding | Encryption (AES) Encrypting Files
+
+Sometimes, ciphers can not always do the job, however this is Why golang has a powerful library for encryption algorithms such as AES. More severe cases may require us to say encrypt a file or the data in a file and move it to a specified output file. Well, given how rich golang's standard library is we can easily do so as shown below.
+
+```go
+package main
+
+import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"fmt"
+	"io/ioutil"
+	"log"
+)
+
+func EncryptFile(key []byte, inputFile string, outputFile string) error {
+	plaintext, x := ioutil.ReadFile(inputFile)
+	if x != nil {
+		return fmt.Errorf("failed to read input file: %v", x)
+	}
+	// Generate a random initialization vector (IV)
+	iv := make([]byte, aes.BlockSize)
+	if _, x := rand.Read(iv); x != nil {
+		return fmt.Errorf("failed to generate IV: %v", x)
+	}
+	// Create the AES cipher block
+	block, x := aes.NewCipher(key)
+	if x != nil {
+		return fmt.Errorf("failed to create AES cipher block: %v", x)
+	}
+	// Create the AES cipher block mode with the IV
+	mode := cipher.NewCBCEncrypter(block, iv)
+	// Apply padding to the plaintext
+	padding := aes.BlockSize - len(plaintext)%aes.BlockSize
+	paddedPlaintext := append(plaintext, bytes.Repeat([]byte{byte(padding)}, padding)...)
+	// Encrypt the padded plaintext
+	ciphertext := make([]byte, len(paddedPlaintext))
+	mode.CryptBlocks(ciphertext, paddedPlaintext)
+	ciphertext = append(iv, ciphertext...)
+	// Write the encrypted data to the output file with specific permissions
+	// and check error
+	if x := ioutil.WriteFile(outputFile, ciphertext, 0644); x != nil {
+		return fmt.Errorf("failed to write encrypted data to output file: %v", x)
+	}
+	fmt.Println("File encrypted successfully.")
+	return nil
+}
+
+func main() {
+	// AES KEY MUST BE BETWEEN 16 and 32 BYTES
+	key := []byte("0123456789abcdef0123456789abcdef")
+	inputFile := os.Args[1] // grab the first argument for the input file
+	outputFile := os.Args[2] // Grab the first argument for the output file
+	x := EncryptFile(key, inputFile, outputFile)
+	if x != nil {
+		log.Fatalf("Encryption Error: %v", x)
+	}
+}
+```
+
+but now we just end up with a file that is completely encrypted and cant be decrypted without a program to do so. Well, this is where the decryption comes into handy! With the same key we can decrypt the same data. Unlike your standard 
+cipher or encoding we cant just reverse the math and then boom our issue is solved, we need an actual key to decrypt the data. This can be done like so.
+
+```go
+func DecryptFile(key []byte, inputFile string, outputFile string) error {
+	// Read the input file
+	ciphertext, x := ioutil.ReadFile(inputFile)
+	if x != nil {
+		return fmt.Errorf("failed to read input file: %v", x)
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+	block, x := aes.NewCipher(key)
+	if x != nil {
+		return fmt.Errorf("failed to create AES cipher block: %v", x)
+	}
+	mode := cipher.NewCBCDecrypter(block, iv)
+	plaintext := make([]byte, len(ciphertext))
+	mode.CryptBlocks(plaintext, ciphertext)
+	padding := int(plaintext[len(plaintext)-1])
+	plaintext = plaintext[:len(plaintext)-padding]
+	if x := ioutil.WriteFile(outputFile, plaintext, 0644); x != nil {
+		return fmt.Errorf("failed to write decrypted data to output file: %v", x)
+	}
+	fmt.Println("File decrypted successfully.")
+	return nil
+}
+```
+
+This function once added to our program can be called with the same values. This time instead of calling the input file argument to be our origin input file we would use the output file. This means the call would look like this 
+
+```go
+DecryptFile(key, outputfile, "decrypted.txt")
+```
+
+and of course you can still change this.
 
 
