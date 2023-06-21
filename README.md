@@ -1127,11 +1127,11 @@ GoSecurity
 		| File catching
 		| File Parsing
 		| File checking
-	|- Web Utils
-		| HTTP requests
-		| Following redirect 
-		| Following Brokenb 
-	...
+	|- Cryptography / Encoding
+		| Encodings
+		| Ciphers
+  		| Encryption algorithms
+		| Encrypting files
 ```
 
 As this structure works much better for organization than just shoving everything into one single file.
@@ -1582,8 +1582,71 @@ func main() {
 
 There are many more advanced ways we can parse this information but this is another good example of how go allows you to quickly execute operations like this.
 
-## Sub Page | Go Web
+## Sub Page | Go Cryptography / Encoding
 
-Web based porgrams in go seem to be getting more and more popular, maybe because of how easy it is to work with go on its web end. Either way, this section will give you some good programs and idea's to work with Go a bit more.
+Encoding is a major part of cyber security related operations. Sometimes you may need to actually encode payloads or decode data using base64 or in more extreme cases ROT13. Below I have a few frameworks and programs that can actually help you understand encryption, ciphers and encodings.
+
+> Cryptography / Encoding | Encoding's ( base64/base32 )
+
+There are many encodings go has built directly into its standard library and one of the more used encodings is the base set of encodings! The program below takes input text, detects if its a specific base encoding and decodes the text.
+
+For context, bases in this means that it detected, encodes and decodes base64 and base32 strings.
+
+```go
+package main
+
+import (
+	"encoding/base32"
+	"encoding/base64"
+	"fmt"
+)
+
+type BaseDecoder struct {
+	Base64decoded []byte
+	Base32decoded []byte
+}
+
+var (
+	X  error
+	BD BaseDecoder
+)
+
+func DetectBase32(input string) bool {
+	BD.Base32decoded, X = base32.StdEncoding.DecodeString(input)
+	return X == nil
+}
+
+func DetectBase64(input string) bool {
+	BD.Base64decoded, X = base64.StdEncoding.DecodeString(input)
+	return X == nil
+}
+
+func EncodeB64(input string) string {
+	return base64.RawStdEncoding.EncodeToString([]byte(input))
+}
+
+func EncodeB32(input string) string {
+	return base32.StdEncoding.EncodeToString([]byte(input))
+}
+
+func main() {
+	base32String := EncodeB32("foobar")
+	base64String := EncodeB64("Hello World!")
+	isBase32 := DetectBase32(base32String)
+	isBase64 := DetectBase64(base64String)
+	if isBase32 {
+		fmt.Println("[+] Found encoding! (BASE32)[" + base32String + "]")
+		fmt.Println(string(BD.Base32decoded))
+	}
+	if isBase64 {
+		fmt.Println("[+] Found encoding! (BASE32)[" + base64String + "]")
+		fmt.Println(string(BD.Base64decoded))
+	}
+}
+```
+
+This program is very easy to understand as we can see we just call base32 an base64 libraries. 
+
+Cryptography / Encoding | Ciphers (Rot13, Beacon Cipher, Vig
 
 
